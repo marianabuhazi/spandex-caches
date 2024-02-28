@@ -38,26 +38,54 @@ module llc_core (
     llc_rsp_out_t.out  llc_rsp_out,
     llc_fwd_out_t.out llc_fwd_out,
     llc_mem_req_t.out llc_mem_req
-    );
+);
 
-    llc_req_in_t llc_req_in();
-    llc_dma_req_in_t llc_dma_req_in();
-    llc_rsp_in_t llc_rsp_in();
-    llc_mem_rsp_t llc_mem_rsp();
+    llc_req_in_t llc_req_in ();
+    llc_dma_req_in_t llc_dma_req_in ();
+    llc_rsp_in_t llc_rsp_in ();
+    llc_mem_rsp_t llc_mem_rsp ();
     logic llc_rst_tb;
 
     //wires
     logic flush_stall, clr_flush_stall, set_flush_stall;
-    logic llc_rsp_out_ready_int, llc_dma_rsp_out_ready_int, llc_fwd_out_ready_int, llc_mem_req_ready_int, llc_rst_tb_done_ready_int;
+    logic
+        llc_rsp_out_ready_int,
+        llc_dma_rsp_out_ready_int,
+        llc_fwd_out_ready_int,
+        llc_mem_req_ready_int,
+        llc_rst_tb_done_ready_int;
 
     //wires
     logic clr_rst_flush_stalled_set, incr_rst_flush_stalled_set;
     logic update_evict_way, set_update_evict_way, incr_evict_way_buf;
     logic is_rst_to_get, is_req_to_get, is_req_to_resume, is_dma_req_to_get, is_rsp_to_get;
-    logic llc_req_in_ready_int, llc_dma_req_in_ready_int, llc_rsp_in_ready_int, llc_rst_tb_ready_int, llc_mem_rsp_ready_int;
-    logic llc_req_in_valid_int, llc_dma_req_in_valid_int, llc_rsp_in_valid_int, llc_rst_tb_valid_int, llc_mem_rsp_valid_int;
-    logic llc_rsp_out_valid_int, llc_dma_rsp_out_valid_int, llc_fwd_out_valid_int, llc_mem_req_valid_int, llc_rst_tb_done_valid_int;
-    logic update_bufs_way, update_bufs_lines, update_bufs_tags, update_bufs_sharers, update_bufs_owners, update_bufs_hprot, update_bufs_dirty_bits, update_bufs_states;
+    logic
+        llc_req_in_ready_int,
+        llc_dma_req_in_ready_int,
+        llc_rsp_in_ready_int,
+        llc_rst_tb_ready_int,
+        llc_mem_rsp_ready_int;
+    logic
+        llc_req_in_valid_int,
+        llc_dma_req_in_valid_int,
+        llc_rsp_in_valid_int,
+        llc_rst_tb_valid_int,
+        llc_mem_rsp_valid_int;
+    logic
+        llc_rsp_out_valid_int,
+        llc_dma_rsp_out_valid_int,
+        llc_fwd_out_valid_int,
+        llc_mem_req_valid_int,
+        llc_rst_tb_done_valid_int;
+    logic
+        update_bufs_way,
+        update_bufs_lines,
+        update_bufs_tags,
+        update_bufs_sharers,
+        update_bufs_owners,
+        update_bufs_hprot,
+        update_bufs_dirty_bits,
+        update_bufs_states;
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic set_set_conflict_fsm, set_set_conflict_mshr, clr_set_conflict_fsm, clr_set_conflict_mshr;
     logic clr_evict_stall, set_evict_stall;
@@ -69,7 +97,14 @@ module llc_core (
     logic req_in_stalled_valid, clr_req_in_stalled_valid, set_req_in_stalled_valid;
     logic set_req_from_conflict, set_req_conflict;
 
-    logic lmem_wr_en_state, lmem_wr_en_line, lmem_wr_en_evict_way, lmem_wr_en_sharers, lmem_wr_en_owner, lmem_wr_en_dirty_bit, lmem_wr_en_all_mem;
+    logic
+        lmem_wr_en_state,
+        lmem_wr_en_line,
+        lmem_wr_en_evict_way,
+        lmem_wr_en_sharers,
+        lmem_wr_en_owner,
+        lmem_wr_en_dirty_bit,
+        lmem_wr_en_all_mem;
     llc_set_t lmem_set_in;
     llc_way_t lmem_way_in;
     state_t lmem_wr_data_state;
@@ -110,7 +145,13 @@ module llc_core (
     owner_t update_bufs_data_owners;
 
     logic add_mshr_entry, mshr_hit_next, mshr_hit;
-    logic update_mshr_tag, update_mshr_way, update_mshr_state, update_mshr_invack_cnt, update_mshr_line, update_mshr_word_mask;
+    logic
+        update_mshr_tag,
+        update_mshr_way,
+        update_mshr_state,
+        update_mshr_invack_cnt,
+        update_mshr_line,
+        update_mshr_word_mask;
     logic [2:0] mshr_op_code;
     logic incr_mshr_cnt;
     mix_msg_t update_mshr_value_msg;
@@ -153,39 +194,39 @@ module llc_core (
     logic [`LLC_WAY_BITS:0] flush_way;
     logic llc_rst_tb_done_o;
 
-    assign llc_dma_req_in_ready_int = 1'b1;
-    assign lmem_rd_en = 1'b1;
-    assign set_set_conflict = set_set_conflict_fsm | set_set_conflict_mshr;
-    assign clr_set_conflict = clr_set_conflict_fsm | clr_set_conflict_mshr;
-    assign update_req_in_stalled = 1'b0;
+    assign llc_dma_req_in_ready_int   = 1'b1;
+    assign lmem_rd_en                 = 1'b1;
+    assign set_set_conflict           = set_set_conflict_fsm | set_set_conflict_mshr;
+    assign clr_set_conflict           = clr_set_conflict_fsm | clr_set_conflict_mshr;
+    assign update_req_in_stalled      = 1'b0;
     assign update_req_in_from_stalled = 1'b0;
-    assign set_req_in_stalled = 1'b0;
-    assign lmem_wr_rst_flush = 'h0;
+    assign set_req_in_stalled         = 1'b0;
+    assign lmem_wr_rst_flush          = 'h0;
 
     //interfaces
-    line_breakdown_llc_t line_br();
-    line_breakdown_llc_t line_br_next();
-    llc_dma_req_in_t llc_dma_req_in_next();
-    llc_rsp_out_t llc_rsp_out_o();
-    llc_dma_rsp_out_t llc_dma_rsp_out_o();
-    llc_fwd_out_t llc_fwd_out_o();
-    llc_mem_req_t llc_mem_req_o();
-    llc_mem_rsp_t llc_mem_rsp_next();
+    line_breakdown_llc_t line_br ();
+    line_breakdown_llc_t line_br_next ();
+    llc_dma_req_in_t llc_dma_req_in_next ();
+    llc_rsp_out_t llc_rsp_out_o ();
+    llc_dma_rsp_out_t llc_dma_rsp_out_o ();
+    llc_fwd_out_t llc_fwd_out_o ();
+    llc_mem_req_t llc_mem_req_o ();
+    llc_mem_rsp_t llc_mem_rsp_next ();
 
     //instances
-    llc_regs regs_u(.*);
-    llc_input_decoder input_decoder_u(.*);
+    llc_regs regs_u (.*);
+    llc_input_decoder input_decoder_u (.*);
     llc_interfaces interfaces_u (.*);
 `ifdef XILINX_FPGA
-    llc_localmem localmem_u(.*);
+    llc_localmem localmem_u (.*);
 `endif
 `ifdef ASIC
-    llc_localmem_asic localmem_u(.*);
+    llc_localmem_asic localmem_u (.*);
 `endif
-    llc_bufs bufs_u(.*);
-    llc_lookup lookup_u(.*);
-    llc_fsm fsm_u(.*);
-    llc_mshr mshr_u(.*);
+    llc_bufs bufs_u (.*);
+    llc_lookup lookup_u (.*);
+    llc_fsm fsm_u (.*);
+    llc_mshr mshr_u (.*);
 
 endmodule
 

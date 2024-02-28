@@ -47,7 +47,7 @@ module l2_wb (
     output logic [`WB_BITS-1:0] wb_valid_i,
     // All WB entries
     output wb_buf_t wb[`N_WB]
-    );
+);
 
     // Generate logic for all WB entries
     genvar i;
@@ -56,42 +56,42 @@ module l2_wb (
             // Update all parts of WB entry when adding
             always_ff @(posedge clk or negedge rst) begin
                 if (!rst) begin
-                    wb[i].tag <= 0;
-                    wb[i].set <= 0;
-                    wb[i].way <= 0;
-                    wb[i].hprot <= 0;
-                    wb[i].line <= 0;
-                    wb[i].word_mask <= 0;
-                    wb[i].dcs_en <= 0;
-                    wb[i].dcs <= 0;
+                    wb[i].tag            <= 0;
+                    wb[i].set            <= 0;
+                    wb[i].way            <= 0;
+                    wb[i].hprot          <= 0;
+                    wb[i].line           <= 0;
+                    wb[i].word_mask      <= 0;
+                    wb[i].dcs_en         <= 0;
+                    wb[i].dcs            <= 0;
                     wb[i].use_owner_pred <= 0;
-                    wb[i].pred_cid <= 0;
-                    wb[i].valid <= 0;
+                    wb[i].pred_cid       <= 0;
+                    wb[i].valid          <= 0;
                 end else if (add_wb_entry) begin
                     if (wb_hit) begin
                         if (wb_hit_i == i) begin
-                            wb[i].way <= update_wb_value_way;
-                            wb[i].hprot <= update_wb_value_hprot;
-                            wb[i].line <= update_wb_value_line;
-                            wb[i].word_mask <= update_wb_value_word_mask;
-                            wb[i].dcs_en <= update_wb_value_dcs_en;
-                            wb[i].dcs <= update_wb_value_dcs;
+                            wb[i].way            <= update_wb_value_way;
+                            wb[i].hprot          <= update_wb_value_hprot;
+                            wb[i].line           <= update_wb_value_line;
+                            wb[i].word_mask      <= update_wb_value_word_mask;
+                            wb[i].dcs_en         <= update_wb_value_dcs_en;
+                            wb[i].dcs            <= update_wb_value_dcs;
                             wb[i].use_owner_pred <= update_wb_value_use_owner_pred;
-                            wb[i].pred_cid <= update_wb_value_pred_cid;
+                            wb[i].pred_cid       <= update_wb_value_pred_cid;
                         end
                     end else if (wb_empty) begin
                         if (wb_empty_i == i) begin
-                            wb[i].tag <= addr_br.tag;
-                            wb[i].set <= addr_br.set;
-                            wb[i].way <= update_wb_value_way;
-                            wb[i].hprot <= update_wb_value_hprot;
-                            wb[i].line <= update_wb_value_line;
-                            wb[i].word_mask <= update_wb_value_word_mask;
-                            wb[i].dcs_en <= update_wb_value_dcs_en;
-                            wb[i].dcs <= update_wb_value_dcs;
+                            wb[i].tag            <= addr_br.tag;
+                            wb[i].set            <= addr_br.set;
+                            wb[i].way            <= update_wb_value_way;
+                            wb[i].hprot          <= update_wb_value_hprot;
+                            wb[i].line           <= update_wb_value_line;
+                            wb[i].word_mask      <= update_wb_value_word_mask;
+                            wb[i].dcs_en         <= update_wb_value_dcs_en;
+                            wb[i].dcs            <= update_wb_value_dcs;
                             wb[i].use_owner_pred <= update_wb_value_use_owner_pred;
-                            wb[i].pred_cid <= update_wb_value_pred_cid;
-                            wb[i].valid <= 1'b1;
+                            wb[i].pred_cid       <= update_wb_value_pred_cid;
+                            wb[i].valid          <= 1'b1;
                         end
                     end
                 end else if (clear_wb_entry) begin
@@ -110,28 +110,28 @@ module l2_wb (
     endgenerate
 
     always_comb begin
-        wb_hit_i_next = 'h0;
-        wb_hit_next = 1'b0;
+        wb_hit_i_next   = 'h0;
+        wb_hit_next     = 1'b0;
         wb_empty_i_next = 'h0;
-        wb_empty_next = 1'b0;
+        wb_empty_next   = 1'b0;
         wb_valid_i_next = 'h0;
-        wb_valid_next = 1'b0;
+        wb_valid_next   = 1'b0;
 
         // Different WB-specific actions from L2 FSM
-        case(wb_op_code)
+        case (wb_op_code)
             // Check if there is a hit, an empty entry or valid entry.
-            `L2_WB_PEEK_REQ : begin
+            `L2_WB_PEEK_REQ: begin
                 for (int i = 0; i < `N_WB; i++) begin
                     if (wb[i].valid == 1'b0) begin
-                        wb_empty_next = 1'b1;
+                        wb_empty_next   = 1'b1;
                         wb_empty_i_next = i;
                     end else begin
-                        wb_valid_next = 1'b1;
+                        wb_valid_next   = 1'b1;
                         wb_valid_i_next = i;
                     end
 
                     if (wb[i].tag == addr_br.tag && wb[i].set == addr_br.set && wb[i].valid == 1'b1) begin
-                        wb_hit_next = 1'b1;
+                        wb_hit_next   = 1'b1;
                         wb_hit_i_next = i;
                     end
 
@@ -141,26 +141,26 @@ module l2_wb (
                     // when the WB is full, therefore we can assume that the entry is valid.
                 end
             end
-            default : begin
+            default: begin
             end
         endcase
     end
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin
-            wb_hit_i <= 0;
-            wb_hit <= 0;
+            wb_hit_i   <= 0;
+            wb_hit     <= 0;
             wb_empty_i <= 0;
-            wb_empty <= 0;
+            wb_empty   <= 0;
             wb_valid_i <= 0;
-            wb_valid <= 0;
+            wb_valid   <= 0;
         end else if (wb_op_code != `L2_WB_IDLE) begin
-            wb_hit_i <= wb_hit_i_next;
-            wb_hit <= wb_hit_next;
+            wb_hit_i   <= wb_hit_i_next;
+            wb_hit     <= wb_hit_next;
             wb_empty_i <= wb_empty_i_next;
-            wb_empty <= wb_empty_next;
+            wb_empty   <= wb_empty_next;
             wb_valid_i <= wb_valid_i_next;
-            wb_valid <= wb_valid_next;
+            wb_valid   <= wb_valid_next;
         end
     end
 

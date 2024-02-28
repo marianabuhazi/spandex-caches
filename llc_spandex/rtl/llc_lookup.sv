@@ -35,21 +35,21 @@ module llc_lookup (
     // Read the line_bufs to get the cache ID of owners, if any.
     output cache_id_t owners_cache_id[`WORDS_PER_LINE],
     output cache_id_t owners_evict_cache_id[`WORDS_PER_LINE]
-    );
+);
 
     always_comb begin
-        way_hit_next = 'h0;
-        tag_hit_next = 1'b0;
-        empty_way_next = 'h0;
-        empty_way_found_next = 1'b0;
-        word_mask_owned_next = 'h0;
+        way_hit_next               = 'h0;
+        tag_hit_next               = 1'b0;
+        empty_way_next             = 'h0;
+        empty_way_found_next       = 1'b0;
+        word_mask_owned_next       = 'h0;
         word_mask_owned_evict_next = 'h0;
 
         if (lookup_en) begin
-            case(lookup_mode)
+            case (lookup_mode)
                 // Check if incoming request hits or misses in cache
-                `LLC_LOOKUP : begin
-                    for (int i = `LLC_WAYS-1; i >= 0; i--) begin
+                `LLC_LOOKUP: begin
+                    for (int i = `LLC_WAYS - 1; i >= 0; i--) begin
                         if (tags_buf[i] == line_br.tag && states_buf[i] != `LLC_I) begin
                             tag_hit_next = 1'b1;
                             way_hit_next = i;
@@ -57,7 +57,7 @@ module llc_lookup (
 
                         if (states_buf[i] == `LLC_I) begin
                             empty_way_found_next = 1'b1;
-                            empty_way_next = i;
+                            empty_way_next       = i;
                         end
                     end
 
@@ -70,7 +70,7 @@ module llc_lookup (
                     // in way to be evicted.
                     if (!tag_hit_next && !empty_way_found_next) begin
                         word_mask_owned_evict_next = owners_buf[evict_way_buf];
-                    end                    
+                    end
                 end
             endcase
         end
@@ -78,18 +78,18 @@ module llc_lookup (
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin
-            way_hit <= 0;
-            tag_hit <= 1'b0;
-            empty_way <= 0;
-            empty_way_found <= 1'b0;
-            word_mask_owned <= 0;
+            way_hit               <= 0;
+            tag_hit               <= 1'b0;
+            empty_way             <= 0;
+            empty_way_found       <= 1'b0;
+            word_mask_owned       <= 0;
             word_mask_owned_evict <= 0;
         end else if (lookup_en) begin
-            way_hit <= way_hit_next;
-            tag_hit <= tag_hit_next;
-            empty_way <= empty_way_next;
-            empty_way_found <= empty_way_found_next;
-            word_mask_owned <= word_mask_owned_next;
+            way_hit               <= way_hit_next;
+            tag_hit               <= tag_hit_next;
+            empty_way             <= empty_way_next;
+            empty_way_found       <= empty_way_found_next;
+            word_mask_owned       <= word_mask_owned_next;
             word_mask_owned_evict <= word_mask_owned_evict_next;
         end
     end
@@ -101,7 +101,7 @@ module llc_lookup (
                 owners_cache_id[i] = 'h0;
 
                 if (tag_hit & word_mask_owned[i]) begin
-                    owners_cache_id[i] = lines_buf[way_hit][i * `BITS_PER_WORD +: `CACHE_ID_WIDTH];
+                    owners_cache_id[i] = lines_buf[way_hit][i*`BITS_PER_WORD+:`CACHE_ID_WIDTH];
                 end
             end
 
@@ -111,7 +111,7 @@ module llc_lookup (
                 if ((!tag_hit && !empty_way_found) & word_mask_owned_evict[i]) begin
                     owners_evict_cache_id[i] = lines_buf[evict_way_buf][i * `BITS_PER_WORD +: `CACHE_ID_WIDTH];
                 end
-            end            
+            end
         end
     endgenerate
 

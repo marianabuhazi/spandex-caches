@@ -31,12 +31,12 @@ module llc_regs (
     output logic set_conflict,
     output logic req_in_stalled_valid,
     output logic [`MSHR_BITS_P1-1:0] mshr_cnt
-    );
+);
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin
             mshr_cnt <= `N_MSHR;
-        // TODO: removed fill_reqs_flush check
+            // TODO: removed fill_reqs_flush check
         end else if (add_mshr_entry) begin
             mshr_cnt <= mshr_cnt - 1;
         end else if (incr_mshr_cnt) begin

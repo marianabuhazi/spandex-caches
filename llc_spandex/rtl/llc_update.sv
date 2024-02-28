@@ -9,7 +9,7 @@
 // Author: Joseph Zuckerman
 // write back to memory
 
-module llc_update(
+module llc_update (
     input logic clk,
     input logic rst,
     input logic update_en,
@@ -52,61 +52,61 @@ module llc_update(
 );
 
     always_comb begin
-        wr_rst_flush = {`LLC_NUM_PORTS{1'b0}};
-        wr_data_state = 0;
-        wr_data_dirty_bit = 1'b0;
-        wr_data_sharers = 0;
-        wr_data_evict_way = 0;
-        wr_data_tag = 0;
-        wr_data_line = 0;
-        wr_data_hprot = 0;
-        wr_data_owner = 0;
-        wr_data_evict_way = 0;
-        wr_en = 1'b0;
-        wr_en_evict_way = 1'b0;
+        wr_rst_flush               = {`LLC_NUM_PORTS{1'b0}};
+        wr_data_state              = 0;
+        wr_data_dirty_bit          = 1'b0;
+        wr_data_sharers            = 0;
+        wr_data_evict_way          = 0;
+        wr_data_tag                = 0;
+        wr_data_line               = 0;
+        wr_data_hprot              = 0;
+        wr_data_owner              = 0;
+        wr_data_evict_way          = 0;
+        wr_en                      = 1'b0;
+        wr_en_evict_way            = 1'b0;
         incr_rst_flush_stalled_set = 1'b0;
-        llc_rst_tb_done_valid_int = 1'b0;
-        llc_rst_tb_done_o = 1'b0;
+        llc_rst_tb_done_valid_int  = 1'b0;
+        llc_rst_tb_done_o          = 1'b0;
         if (update_en && llc_rst_tb_done_ready_int) begin
             if (is_rst_to_resume) begin
-                wr_rst_flush  = {`LLC_NUM_PORTS{1'b1}};
-                wr_data_state = `INVALID;
-                wr_data_dirty_bit = 1'b0;
-                wr_data_sharers = 0;
-                wr_data_evict_way = 0;
-                wr_en_evict_way = 1'b1;
+                wr_rst_flush               = {`LLC_NUM_PORTS{1'b1}};
+                wr_data_state              = `INVALID;
+                wr_data_dirty_bit          = 1'b0;
+                wr_data_sharers            = 0;
+                wr_data_evict_way          = 0;
+                wr_en_evict_way            = 1'b1;
                 incr_rst_flush_stalled_set = 1'b1;
-                if (!flush_stall &&  !rst_stall) begin
+                if (!flush_stall && !rst_stall) begin
                     llc_rst_tb_done_valid_int = 1'b1;
-                    llc_rst_tb_done_o = 1'b1;
+                    llc_rst_tb_done_o         = 1'b1;
                 end
             end else if (is_flush_to_resume) begin
-                wr_data_state = `INVALID;
-                wr_data_dirty_bit = 1'b0;
-                wr_data_sharers = 0;
-                wr_data_evict_way = 0;
+                wr_data_state              = `INVALID;
+                wr_data_dirty_bit          = 1'b0;
+                wr_data_sharers            = 0;
+                wr_data_evict_way          = 0;
                 incr_rst_flush_stalled_set = 1'b1;
                 for (int cur_way = 0; cur_way < `LLC_WAYS; cur_way++) begin
                     if (states_buf[cur_way] == `VALID && hprots_buf[cur_way] == `DATA) begin
                         wr_rst_flush[cur_way] = 1'b1;
                     end
                 end
-                if (!flush_stall &&  !rst_stall) begin
+                if (!flush_stall && !rst_stall) begin
                     llc_rst_tb_done_valid_int = 1'b1;
-                    llc_rst_tb_done_o = 1'b1;
+                    llc_rst_tb_done_o         = 1'b1;
                 end
-                end else if (is_rsp_to_get || is_req_to_get || is_dma_req_to_get ||
+            end else if (is_rsp_to_get || is_req_to_get || is_dma_req_to_get ||
                          is_dma_read_to_resume || is_dma_write_to_resume || is_req_to_resume) begin
-                wr_en = 1'b1;
-                wr_data_tag = tags_buf[way];
-                wr_data_state = states_buf[way];
-                wr_data_line = lines_buf[way];
-                wr_data_hprot = hprots_buf[way];
-                wr_data_owner = owners_buf[way];
-                wr_data_sharers = sharers_buf[way];
+                wr_en             = 1'b1;
+                wr_data_tag       = tags_buf[way];
+                wr_data_state     = states_buf[way];
+                wr_data_line      = lines_buf[way];
+                wr_data_hprot     = hprots_buf[way];
+                wr_data_owner     = owners_buf[way];
+                wr_data_sharers   = sharers_buf[way];
                 wr_data_dirty_bit = dirty_bits_buf[way];
                 wr_data_evict_way = evict_way_buf;
-                wr_en_evict_way = update_evict_way;
+                wr_en_evict_way   = update_evict_way;
             end
         end
     end

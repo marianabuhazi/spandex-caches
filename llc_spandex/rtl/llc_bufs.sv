@@ -2,7 +2,7 @@
 `include "spandex_consts.svh"
 `include "spandex_types.svh"
 
-module llc_bufs(
+module llc_bufs (
     input logic clk,
     input logic rst,
     // Command to read into bufs.
@@ -32,7 +32,7 @@ module llc_bufs(
     output hprot_t hprots_buf[`LLC_WAYS],
     output llc_state_t states_buf[`LLC_WAYS],
     output logic dirty_bits_buf[`LLC_WAYS]
-    );
+);
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin

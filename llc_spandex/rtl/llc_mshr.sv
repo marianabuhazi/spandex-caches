@@ -2,7 +2,7 @@
 `include "spandex_consts.svh"
 `include "spandex_types.svh"
 
-module llc_mshr(
+module llc_mshr (
     input logic clk,
     input logic rst,
     input logic add_mshr_entry,
@@ -39,7 +39,7 @@ module llc_mshr(
     output logic [`MSHR_BITS-1:0] mshr_i,
     // All MSHR entries
     output mshr_llc_buf_t mshr[`N_MSHR]
-    );
+);
 
     // Generate logic for all MSHR entries
     genvar i;
@@ -48,19 +48,19 @@ module llc_mshr(
             // Update all parts of MSHR entry when adding
             always_ff @(posedge clk or negedge rst) begin
                 if (!rst) begin
-                    mshr[i].msg <= 0;
-                    mshr[i].req_id <= 0;
-                    mshr[i].set <= 0;
-                    mshr[i].way <= 0;
-                    mshr[i].hprot <= 0;
+                    mshr[i].msg           <= 0;
+                    mshr[i].req_id        <= 0;
+                    mshr[i].set           <= 0;
+                    mshr[i].way           <= 0;
+                    mshr[i].hprot         <= 0;
                     mshr[i].word_mask_reg <= 0;
                 end else if (add_mshr_entry) begin
                     if (mshr_i == i) begin
-                        mshr[i].msg <= update_mshr_value_msg;
-                        mshr[i].req_id <= update_mshr_value_req_id;
-                        mshr[i].set <= line_br.set;
-                        mshr[i].way <= update_mshr_value_way;
-                        mshr[i].hprot <= update_mshr_value_hprot;
+                        mshr[i].msg           <= update_mshr_value_msg;
+                        mshr[i].req_id        <= update_mshr_value_req_id;
+                        mshr[i].set           <= line_br.set;
+                        mshr[i].way           <= update_mshr_value_way;
+                        mshr[i].hprot         <= update_mshr_value_hprot;
                         mshr[i].word_mask_reg <= update_mshr_value_word_mask_reg;
                     end
                 end
@@ -124,24 +124,24 @@ module llc_mshr(
     endgenerate
 
     always_comb begin
-        mshr_i_next = 0;
-        mshr_hit_next = 1'b0;
+        mshr_i_next           = 0;
+        mshr_hit_next         = 1'b0;
         clr_set_conflict_mshr = 1'b0;
         set_set_conflict_mshr = 1'b0;
 
         // Different MSHR-specific actions from L2 FSM
-        case(mshr_op_code)
+        case (mshr_op_code)
             // Check if there is a matching MSHR entry for the incoming response.
-            `LLC_MSHR_LOOKUP : begin
+            `LLC_MSHR_LOOKUP: begin
                 for (int i = 0; i < `N_MSHR; i++) begin
                     if (mshr[i].tag == line_br.tag && mshr[i].set == line_br.set && mshr[i].state != `LLC_I) begin
                         mshr_hit_next = 1'b1;
-                        mshr_i_next = i;
+                        mshr_i_next   = i;
                     end
                 end
             end
             // Check if there is a conflicting entry to incoming request. If yes, stall.
-            `LLC_MSHR_PEEK_REQ : begin
+            `LLC_MSHR_PEEK_REQ: begin
                 clr_set_conflict_mshr = 1'b1;
 
                 for (int i = 0; i < `N_MSHR; i++) begin
@@ -157,7 +157,7 @@ module llc_mshr(
                     end
                 end
             end
-            default : begin
+            default: begin
                 mshr_hit_next = 1'b0;
             end
         endcase
@@ -165,10 +165,10 @@ module llc_mshr(
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin
-            mshr_i <= 0;
+            mshr_i   <= 0;
             mshr_hit <= 0;
         end else if (mshr_op_code != `LLC_MSHR_IDLE) begin
-            mshr_i <= mshr_i_next;
+            mshr_i   <= mshr_i_next;
             mshr_hit <= mshr_hit_next;
         end
     end

@@ -24,7 +24,7 @@ module l2_localmem_asic (
     output hprot_t lmem_rd_data_hprot[`L2_NUM_PORTS],
     output l2_way_t lmem_rd_data_evict_way,
     output state_t lmem_rd_data_state[`L2_NUM_PORTS][`WORDS_PER_LINE]
-    );
+);
 
     logic [23:0] lmem_rd_data_mixed_tmp[`L2_NUM_PORTS][`L2_ASIC_SRAMS_PER_WAY];
     line_t lmem_rd_data_line_tmp[`L2_NUM_PORTS][`L2_ASIC_SRAMS_PER_WAY];
@@ -43,12 +43,17 @@ module l2_localmem_asic (
     end
 
     logic lmem_wr_en_mixed_bank[`L2_ASIC_SRAMS_PER_WAY];
-    logic lmem_wr_en_line_bank[`L2_ASIC_SRAMS_PER_WAY];
+    logic lmem_wr_en_line_bank [`L2_ASIC_SRAMS_PER_WAY];
 
     logic [23:0] lmem_wr_data_mixed, wr_mixed_mask;
-    assign lmem_wr_data_mixed = {lmem_wr_data_hprot, lmem_wr_data_state[0], {(24 - 1 - `STABLE_STATE_BITS - `L2_TAG_BITS){1'b0}}, lmem_wr_data_tag};
+    assign lmem_wr_data_mixed = {
+        lmem_wr_data_hprot,
+        lmem_wr_data_state[0],
+        {(24 - 1 - `STABLE_STATE_BITS - `L2_TAG_BITS) {1'b0}},
+        lmem_wr_data_tag
+    };
 
-    l2_way_t evict_way_arr [`L2_SETS];
+    l2_way_t evict_way_arr[`L2_SETS];
 
     //determine mask for writing to shared SRAM
     always_comb begin
@@ -104,45 +109,59 @@ module l2_localmem_asic (
             for (j = 0; j < `L2_ASIC_SRAMS_PER_WAY; j++) begin
                 if (`ASIC_SRAM_ADDR_WIDTH > (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) + 1) begin
 `ifdef GF12
-                    GF12_SRAM_SP_512x24 mixed_sram(
+                    GF12_SRAM_SP_512x24 mixed_sram (
                         .CLK(clk),
-                        .A0({{(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
-                                lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]}),
+                        .A0({
+                            {(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
+                            lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]
+                        }),
                         .D0(lmem_wr_data_mixed),
                         .Q0(lmem_rd_data_mixed_tmp[i][j]),
                         .WE0(lmem_wr_en_port[i] & lmem_wr_en_mixed_bank[j]),
                         .CE0(lmem_rd_en),
-                        .WEM0(wr_mixed_mask));
+                        .WEM0(wr_mixed_mask)
+                    );
 `else
-                    sram_behav #(.DATA_WIDTH(24), .NUM_WORDS(512)) mixed_sram(
+                    sram_behav #(
+                        .DATA_WIDTH(24),
+                        .NUM_WORDS (512)
+                    ) mixed_sram (
                         .clk_i(clk),
                         .req_i(lmem_rd_en),
                         .we_i(lmem_wr_en_port[i] & lmem_wr_en_mixed_bank[j]),
-                        .addr_i({{(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
-                                lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]}),
+                        .addr_i({
+                            {(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
+                            lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]
+                        }),
                         .wdata_i(lmem_wr_data_mixed),
                         .be_i(wr_mixed_mask),
-                        .rdata_o(lmem_rd_data_mixed_tmp[i][j]));
+                        .rdata_o(lmem_rd_data_mixed_tmp[i][j])
+                    );
 `endif
                 end else begin
 `ifdef GF12
-                    GF12_SRAM_SP_512x24 mixed_sram(
-                        .CLK(clk),
-                        .A0(lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]),
-                        .D0(lmem_wr_data_mixed),
-                        .Q0(lmem_rd_data_mixed_tmp[i][j]),
-                        .WE0(lmem_wr_en_port[i] & lmem_wr_en_mixed_bank[j]),
-                        .CE0(lmem_rd_en),
-                        .WEM0(wr_mixed_mask));
+                    GF12_SRAM_SP_512x24 mixed_sram (
+                        .CLK (clk),
+                        .A0  (lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]),
+                        .D0  (lmem_wr_data_mixed),
+                        .Q0  (lmem_rd_data_mixed_tmp[i][j]),
+                        .WE0 (lmem_wr_en_port[i] & lmem_wr_en_mixed_bank[j]),
+                        .CE0 (lmem_rd_en),
+                        .WEM0(wr_mixed_mask)
+                    );
 `else
-                    sram_behav #(.DATA_WIDTH(24), .NUM_WORDS(512)) mixed_sram(
+                    sram_behav #(
+                        .DATA_WIDTH(24),
+                        .NUM_WORDS (512)
+                    ) mixed_sram (
                         .clk_i(clk),
                         .req_i(lmem_rd_en),
                         .we_i(lmem_wr_en_port[i] & lmem_wr_en_mixed_bank[j]),
-                        .addr_i(lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]),
+                        .addr_i(lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]),
                         .wdata_i(lmem_wr_data_mixed),
                         .be_i(wr_mixed_mask),
-                        .rdata_o(lmem_rd_data_mixed_tmp[i][j]));
+                        .rdata_o(lmem_rd_data_mixed_tmp[i][j])
+                    );
 `endif
                 end
 
@@ -151,45 +170,59 @@ module l2_localmem_asic (
                 for (k = 0; k < `L2_ASIC_SRAMS_PER_LINE; k++) begin
                     if (`ASIC_SRAM_ADDR_WIDTH > (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) + 1) begin
 `ifdef GF12
-                        GF12_SRAM_SP_512x64 line_sram(
+                        GF12_SRAM_SP_512x64 line_sram (
                             .CLK(clk),
-                            .A0({{(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
-                                    lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]}),
+                            .A0({
+                                {(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
+                                lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]
+                            }),
                             .D0(lmem_wr_data_line[(64*(k+1)-1):(64*k)]),
                             .Q0(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)]),
                             .WE0(lmem_wr_en_port[i] & lmem_wr_en_line_bank[j]),
                             .CE0(lmem_rd_en),
-                            .WEM0({64{1'b1}}));
+                            .WEM0({64{1'b1}})
+                        );
 `else
-                        sram_behav #(.DATA_WIDTH(64), .NUM_WORDS(512)) line_sram(
+                        sram_behav #(
+                            .DATA_WIDTH(64),
+                            .NUM_WORDS (512)
+                        ) line_sram (
                             .clk_i(clk),
                             .req_i(lmem_rd_en),
                             .we_i(lmem_wr_en_port[i] & lmem_wr_en_line_bank[j]),
-                            .addr_i({{(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
-                                    lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]}),
+                            .addr_i({
+                                {(`ASIC_SRAM_ADDR_WIDTH - (`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS) - 1){1'b0}},
+                                lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]
+                            }),
                             .wdata_i(lmem_wr_data_line[(64*(k+1)-1):(64*k)]),
                             .be_i({64{1'b1}}),
-                            .rdata_o(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)]));
+                            .rdata_o(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)])
+                        );
 `endif
                     end else begin
 `ifdef GF12
-                        GF12_SRAM_SP_512x64 line_sram(
-                            .CLK(clk),
-                            .A0(lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]),
-                            .D0(lmem_wr_data_line[(64*(k+1)-1):(64*k)]),
-                            .Q0(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)]),
-                            .WE0(lmem_wr_en_port[i] & lmem_wr_en_line_bank[j]),
-                            .CE0(lmem_rd_en),
-                            .WEM0({64{1'b1}}));
+                        GF12_SRAM_SP_512x64 line_sram (
+                            .CLK (clk),
+                            .A0  (lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]),
+                            .D0  (lmem_wr_data_line[(64*(k+1)-1):(64*k)]),
+                            .Q0  (lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)]),
+                            .WE0 (lmem_wr_en_port[i] & lmem_wr_en_line_bank[j]),
+                            .CE0 (lmem_rd_en),
+                            .WEM0({64{1'b1}})
+                        );
 `else
-                        sram_behav #(.DATA_WIDTH(64), .NUM_WORDS(512)) line_sram(
+                        sram_behav #(
+                            .DATA_WIDTH(64),
+                            .NUM_WORDS (512)
+                        ) line_sram (
                             .clk_i(clk),
                             .req_i(lmem_rd_en),
                             .we_i(lmem_wr_en_port[i] & lmem_wr_en_line_bank[j]),
-                            .addr_i(lmem_set_in[(`L2_SET_BITS - `L2_ASIC_SRAM_INDEX_BITS - 1):0]),
+                            .addr_i(lmem_set_in[(`L2_SET_BITS-`L2_ASIC_SRAM_INDEX_BITS-1):0]),
                             .wdata_i(lmem_wr_data_line[(64*(k+1)-1):(64*k)]),
                             .be_i({64{1'b1}}),
-                            .rdata_o(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)]));
+                            .rdata_o(lmem_rd_data_line_tmp[i][j][(64*(k+1)-1):(64*k)])
+                        );
 `endif
                     end
                 end

@@ -18,7 +18,7 @@ module l2_bufs (
     output l2_tag_t tags_buf[`L2_WAYS],
     output hprot_t hprots_buf[`L2_WAYS],
     output state_t states_buf[`L2_WAYS][`WORDS_PER_LINE]
-    );
+);
     // Read all data of a set from the registers populated
     // by localmem into bufs registers that is used in the FSM.
     always_ff @(posedge clk or negedge rst) begin
